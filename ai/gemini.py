@@ -29,29 +29,30 @@ def get_media_urls_from_message(message) -> List[str]:
     return urls
 
 
-def build_context_from_messages(messages: List) -> str:
-    """Format last N messages as context for the model (text + attachment/embed URLs)."""
+def build_context_from_messages(messages: List, include_media: bool = True) -> str:
+    """Format messages as context (text only, or text + attachment/embed URLs if include_media)."""
     lines = []
     for msg in messages:
         author = msg.author.display_name if hasattr(msg.author, 'display_name') else str(msg.author)
         content = (msg.content or "(no text)").strip()
         if not content and (msg.attachments or msg.embeds):
             content = "(media)"
-        extra: List[str] = []
-        for att in msg.attachments:
-            extra.append(att.url)
-        for embed in msg.embeds:
-            img_url = getattr(embed.image, "url", None)
-            if img_url:
-                extra.append(img_url)
-            thumb_url = getattr(embed.thumbnail, "url", None)
-            if thumb_url:
-                extra.append(thumb_url)
-            video_url = getattr(getattr(embed, "video", None), "url", None)
-            if video_url:
-                extra.append(video_url)
-        if extra:
-            content = f"{content} [media: {' '.join(extra)}]"
+        if include_media:
+            extra: List[str] = []
+            for att in msg.attachments:
+                extra.append(att.url)
+            for embed in msg.embeds:
+                img_url = getattr(embed.image, "url", None)
+                if img_url:
+                    extra.append(img_url)
+                thumb_url = getattr(embed.thumbnail, "url", None)
+                if thumb_url:
+                    extra.append(thumb_url)
+                video_url = getattr(getattr(embed, "video", None), "url", None)
+                if video_url:
+                    extra.append(video_url)
+            if extra:
+                content = f"{content} [media: {' '.join(extra)}]"
         lines.append(f"{author}: {content}")
     return "\n".join(lines) if lines else "(no previous messages)"
 

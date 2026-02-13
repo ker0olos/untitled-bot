@@ -64,13 +64,14 @@ async def on_message(message):
 
         if random.random() < REPLY_CHANCE:
             try:
+                # Previous messages only (exclude current — that's the one we're replying to)
                 history: List = []
-                async for msg in message.channel.history(limit=CONTEXT_MESSAGE_COUNT):
-                    if not msg.author.bot:
+                async for msg in message.channel.history(limit=CONTEXT_MESSAGE_COUNT + 1):
+                    if msg.id != message.id and not msg.author.bot:
                         history.append(msg)
                 history.reverse()
-                context = build_context_from_messages(history)
-                print(f"Context: {context}")
+                additional_context = build_context_from_messages(history, include_media=False)
+                print(f"Additional context: {additional_context}")
 
                 user_content = (message.content or "").strip() or "(no text)"
                 media_urls = get_media_urls_from_message(message)
@@ -79,7 +80,7 @@ async def on_message(message):
                 reply_name = webhook_name_by_server.get(server_id) or "Untitled"
                 personality = personality_by_server.get(server_id)
                 reply_text = await asyncio.get_event_loop().run_in_executor(
-                    _executor, get_gemini_reply, user_content, context, media_urls, personality, reply_name
+                    _executor, get_gemini_reply, user_content, additional_context, media_urls, personality, reply_name
                 )
                 print(f"Reply text: {reply_text}")
                 if reply_text:

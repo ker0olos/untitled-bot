@@ -14,7 +14,9 @@ RULES (TAKE PRIORITY OVER THE PERSONALITY):
 - React to what people ACTUALLY said. Don't pivot to something random.
 - If the conversation is casual, keep it casual. Match the vibe.
 
-Current Context:
+The NEXT message is the one you are replying to. Focus your response on that message.
+
+Additional context (recent conversation; use only for vibe and continuity):
 {context}
 """
 
