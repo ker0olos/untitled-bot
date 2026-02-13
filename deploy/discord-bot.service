@@ -10,7 +10,7 @@ After=network.target
 Type=simple
 User=deploy
 WorkingDirectory=/home/projects/app
-Environment=PATH=/home/projects/app/venv/bin:/usr/bin
+Environment=PATH=/home/projects/app/.venv/bin:/usr/bin
 ExecStart=/home/projects/app/.venv/bin/python bot.py
 Restart=always
 RestartSec=5
