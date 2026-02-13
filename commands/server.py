@@ -86,7 +86,7 @@ def setup(bot: commands.Bot) -> None:
             supabase = get_supabase()
             supabase.table('servers').update({'webhook_name': name}).eq('server_id', server_id).execute()
             webhook_name_by_server[server_id] = name
-            await interaction.response.send_message(f'Bot Name set to **{name}**.', ephemeral=True)
+            await interaction.response.send_message(f'Bot Name set to **{name}**.')
         except Exception as e:
             await interaction.response.send_message(f'Failed to save: {e}', ephemeral=True)
 
@@ -106,7 +106,7 @@ def setup(bot: commands.Bot) -> None:
             supabase = get_supabase()
             supabase.table('servers').update({'webhook_avatar_url': url}).eq('server_id', server_id).execute()
             webhook_avatar_by_server[server_id] = url
-            await interaction.response.send_message('Bot Avatar updated', ephemeral=True)
+            await interaction.response.send_message('Bot Avatar updated')
         except Exception as e:
             await interaction.response.send_message(f'Failed to save: {e}', ephemeral=True)
 
@@ -131,6 +131,6 @@ def setup(bot: commands.Bot) -> None:
                     on_conflict='server_id',
                 ).execute()
             personality_by_server[server_id] = text
-            await interaction.response.send_message('Personality updated.', ephemeral=True)
+            await interaction.response.send_message('Personality updated.')
         except Exception as e:
             await interaction.response.send_message(f'Failed to save: {e}', ephemeral=True)
