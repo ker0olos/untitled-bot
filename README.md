@@ -53,14 +53,16 @@ pip install -r requirements.txt
    
    **Note:** You need "Manage Server" permission on the server to invite bots.
 
-5. Run the bot:
+5. (Optional) Supabase: add `SUPABASE_URL` and `SUPABASE_KEY` to `.env`. For `/setchannel`, create a table `servers` with columns `guild_id` (text, unique) and `channel_id` (text).
+
+6. Run the bot:
 ```bash
 python bot.py
 ```
 
 ## Commands
 
-- `/ping` - Responds with "Pong!"
+- `/setchannel` - Saves this server's guild ID and channel ID to the Supabase `servers` table (optional: pass a channel, otherwise uses current channel).
 
 ## Notes
 

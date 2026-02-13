@@ -2,14 +2,15 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import os
+from typing import Optional
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+from supabase_client import get_supabase
+
 load_dotenv()
 
-# Set up bot
 intents = discord.Intents.default()
-bot = commands.Bot(command_prefix=None, intents=intents)
+bot = commands.Bot(command_prefix="~", intents=intents)
 
 
 @bot.event
@@ -22,10 +23,30 @@ async def on_ready():
         print(f'Failed to sync commands: {e}')
 
 
-@bot.tree.command(name='ping', description='Responds with pong')
-async def ping(interaction: discord.Interaction):
-    """Responds with pong when pinged"""
-    await interaction.response.send_message('Pong!')
+@bot.tree.command(name='setchannel', description='Set this server\'s channel')
+@app_commands.default_permissions(manage_guild=True)  # Only users with "Manage Server" see/use this by default
+async def setchannel(
+    interaction: discord.Interaction,
+):
+    channel = interaction.channel
+  
+    server_id = str(interaction.guild_id)
+    channel_id = str(channel.id)
+    try:
+        supabase = get_supabase()
+        supabase.table('servers').upsert(
+            {'server_id': server_id, 'channel_id': channel_id},
+            on_conflict='server_id',
+        ).execute()
+        await interaction.response.send_message(
+            f'Channel set to {channel.mention} for this server.',
+            ephemeral=True,
+        )
+    except Exception as e:
+        await interaction.response.send_message(
+            f'Failed to save: {e}',
+            ephemeral=True,
+        )
 
 
 # Run the bot
