@@ -5,7 +5,7 @@ from typing import List, Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import SystemMessage, HumanMessage
 
-from ai.rules import SYSTEM_PROMPT
+from ai.rules import SYSTEM_PROMPT, DEFAULT_PERSONALITY
 
 llm = ChatGoogleGenerativeAI(
     model="gemini-3-flash-preview",
@@ -60,11 +60,13 @@ def get_gemini_reply(
     user_message: str,
     context: str,
     media_urls: Optional[List[str]] = None,
+    personality: Optional[str] = None,
     name: str = "Untitled",
 ) -> Optional[str]:
     """Call Gemini with system prompt, context, and optional attachment/embed URLs; return reply text or None."""
-    display_name = (name or "Untitled").strip()
-    system_text = SYSTEM_PROMPT.format(context=context, name=display_name)
+    personality_text = (personality or DEFAULT_PERSONALITY).strip()
+    display_name = (name or "Untitled").strip() or "Untitled"
+    system_text = SYSTEM_PROMPT.format(context=context, personality=personality_text, name=display_name)
     if media_urls:
         content_parts: List = [
             {"type": "text", "text": user_message}

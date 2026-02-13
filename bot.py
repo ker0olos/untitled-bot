@@ -13,6 +13,7 @@ from store import (
     webhook_by_server,
     webhook_name_by_server,
     webhook_avatar_by_server,
+    personality_by_server,
     load_watched_channels,
 )
 from ai.gemini import (
@@ -76,8 +77,9 @@ async def on_message(message):
                 if media_urls:
                     print(f"Media URLs: {media_urls}")
                 reply_name = webhook_name_by_server.get(server_id) or "Untitled"
+                personality = personality_by_server.get(server_id)
                 reply_text = await asyncio.get_event_loop().run_in_executor(
-                    _executor, get_gemini_reply, user_content, context, media_urls, reply_name
+                    _executor, get_gemini_reply, user_content, context, media_urls, personality, reply_name
                 )
                 print(f"Reply text: {reply_text}")
                 if reply_text:

@@ -9,6 +9,7 @@ from store import (
     webhook_by_server,
     webhook_name_by_server,
     webhook_avatar_by_server,
+    personality_by_server,
 )
 
 
@@ -47,13 +48,15 @@ def setup(bot: commands.Bot) -> None:
                 'webhook_id': str(webhook.id),
                 'webhook_token': webhook.token,
             }
-            existing = supabase.table('servers').select('webhook_name, webhook_avatar_url').eq('server_id', server_id).execute()
+            existing = supabase.table('servers').select('webhook_name, webhook_avatar_url, personality').eq('server_id', server_id).execute()
             if existing.data and len(existing.data) > 0:
                 row = existing.data[0]
                 if row.get('webhook_name') is not None:
                     payload['webhook_name'] = row['webhook_name']
                 if row.get('webhook_avatar_url') is not None:
                     payload['webhook_avatar_url'] = row['webhook_avatar_url']
+                if row.get('personality') is not None:
+                    payload['personality'] = row['personality']
             supabase.table('servers').upsert(payload, on_conflict='server_id').execute()
 
             watched_channels[server_id] = channel_id
@@ -104,5 +107,30 @@ def setup(bot: commands.Bot) -> None:
             supabase.table('servers').update({'webhook_avatar_url': url}).eq('server_id', server_id).execute()
             webhook_avatar_by_server[server_id] = url
             await interaction.response.send_message('Bot Avatar updated', ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(f'Failed to save: {e}', ephemeral=True)
+
+    @bot.tree.command(name='setpersonality', description='Set the personality/instructions used for AI replies in this server')
+    @app_commands.default_permissions(manage_guild=True)
+    @app_commands.describe(personality='Personality text (instructions for how the AI should behave)')
+    async def setpersonality(interaction: discord.Interaction, personality: str):
+        text = (personality or '').strip()
+        if not text:
+            await interaction.response.send_message(
+                'Personality cannot be empty. Describe how the AI should behave.',
+                ephemeral=True,
+            )
+            return
+        server_id = str(interaction.guild_id)
+        try:
+            supabase = get_supabase()
+            result = supabase.table('servers').update({'personality': text}).eq('server_id', server_id).execute()
+            if not result.data:
+                supabase.table('servers').upsert(
+                    {'server_id': server_id, 'personality': text},
+                    on_conflict='server_id',
+                ).execute()
+            personality_by_server[server_id] = text
+            await interaction.response.send_message('Personality updated.', ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(f'Failed to save: {e}', ephemeral=True)

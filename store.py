@@ -11,6 +11,8 @@ webhook_by_server: Dict[str, tuple] = {}
 webhook_name_by_server: Dict[str, str] = {}
 # server_id -> avatar URL for webhook replies
 webhook_avatar_by_server: Dict[str, str] = {}
+# server_id -> personality text for system prompt
+personality_by_server: Dict[str, str] = {}
 
 
 async def load_watched_channels() -> None:
@@ -23,6 +25,7 @@ async def load_watched_channels() -> None:
         webhook_by_server.clear()
         webhook_name_by_server.clear()
         webhook_avatar_by_server.clear()
+        personality_by_server.clear()
 
         for row in response.data:
             server_id = str(row.get('server_id'))
@@ -39,6 +42,9 @@ async def load_watched_channels() -> None:
                     webhook_name_by_server[server_id] = name
                 if avatar:
                     webhook_avatar_by_server[server_id] = avatar
+                personality = row.get('personality')
+                if personality:
+                    personality_by_server[server_id] = personality
                 print(f'  - Watching server {server_id}, channel {channel_id}')
     except Exception as e:
         print(f'Failed to load watched channels: {e}')
