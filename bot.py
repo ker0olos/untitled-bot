@@ -31,7 +31,7 @@ intents.message_content = True
 intents.messages = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-REPLY_CHANCE = 1.0
+REPLY_CHANCE = 0.25
 CONTEXT_MESSAGE_COUNT = 10
 _executor = ThreadPoolExecutor(max_workers=2)
 
@@ -63,7 +63,12 @@ async def on_message(message):
     if server_id in watched_channels and watched_channels[server_id] == channel_id:
         print(f'[{message.guild.name} | #{message.channel.name}] {message.author.name}: {message.content}')
 
-        if random.random() < REPLY_CHANCE:
+        reply_name = webhook_name_by_server.get(server_id) 
+        content_lower = (message.content or "").strip().lower()
+        mentioned_by_name = reply_name and reply_name.strip().lower() in content_lower
+        should_reply = mentioned_by_name or random.random() < REPLY_CHANCE
+
+        if should_reply:
             try:
                 # Previous messages only (exclude current — that's the one we're replying to)
                 history: List = []
