@@ -1,5 +1,6 @@
 """Gemini LLM integration and message utilities for AI replies."""
 import os
+import re
 from typing import List, Optional
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -14,8 +15,29 @@ llm = ChatGoogleGenerativeAI(
 )
 
 
+# Custom emoji in content: <:name:id> or <a:name:id> (animated)
+_CUSTOM_EMOJI_RE = re.compile(r"<(a?):[\w]+:(\d+)>")
+
+
+def strip_custom_emojis(content: str) -> str:
+    """Remove Discord custom emoji markup (<:name:id> and <a:name:id>) from text."""
+    return _CUSTOM_EMOJI_RE.sub("", content)
+
+
+def get_custom_emoji_urls_from_content(content: Optional[str]) -> List[str]:
+    """Extract Discord CDN image URLs for custom emojis found in message content."""
+    urls: List[str] = []
+    if not content:
+        return urls
+    for m in _CUSTOM_EMOJI_RE.finditer(content):
+        animated, emoji_id = m.group(1) == "a", m.group(2)
+        ext = "gif" if animated else "png"
+        urls.append(f"https://cdn.discordapp.com/emojis/{emoji_id}.{ext}")
+    return urls
+
+
 def get_media_urls_from_message(message) -> List[str]:
-    """Collect attachment URLs and embed image/thumbnail/video URLs from a message."""
+    """Collect attachment, embed, sticker, and custom-emoji image URLs from a message."""
     urls: List[str] = []
     for att in message.attachments:
         urls.append(att.url)
@@ -26,6 +48,10 @@ def get_media_urls_from_message(message) -> List[str]:
             urls.append(embed.thumbnail.url)
         if getattr(getattr(embed, "video", None), "url", None):
             urls.append(embed.video.url)
+    for sticker in getattr(message, "stickers", []):
+        if getattr(sticker, "url", None):
+            urls.append(sticker.url)
+    urls.extend(get_custom_emoji_urls_from_content(message.content))
     return urls
 
 

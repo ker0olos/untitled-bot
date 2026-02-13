@@ -20,6 +20,7 @@ from ai.gemini import (
     get_media_urls_from_message,
     build_context_from_messages,
     get_gemini_reply,
+    strip_custom_emojis,
 )
 from commands.server import setup as setup_server_commands
 
@@ -73,7 +74,7 @@ async def on_message(message):
                 additional_context = build_context_from_messages(history, include_media=False)
                 print(f"Additional context: {additional_context}")
 
-                user_content = (message.content or "").strip() or "(no text)"
+                user_content = strip_custom_emojis((message.content or "").strip()) or "(no text)"
                 media_urls = get_media_urls_from_message(message)
                 if media_urls:
                     print(f"Media URLs: {media_urls}")
