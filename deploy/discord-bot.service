@@ -1,4 +1,4 @@
-# Copy to server: sudo cp deploy/yuuki.service /etc/systemd/system/
+# Copy to server: cp deploy/discord-bot.service /etc/systemd/system/
 # Then: sudo systemctl daemon-reload && sudo systemctl enable discord-bot
 # Edit paths and user below to match your server.
 
@@ -10,7 +10,7 @@ After=network.target
 Type=simple
 User=deploy
 WorkingDirectory=/home/projects/app
-Environment=PATH=/home/projects/app.venv/bin:/usr/bin
+Environment=PATH=/home/projects/app/venv/bin:/usr/bin
 ExecStart=/home/projects/app/.venv/bin/python bot.py
 Restart=always
 RestartSec=5
