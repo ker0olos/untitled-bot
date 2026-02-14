@@ -63,10 +63,28 @@ async def on_message(message):
     if server_id in watched_channels and watched_channels[server_id] == channel_id:
         print(f'[{message.guild.name} | #{message.channel.name}] {message.author.name}: {message.content}')
 
-        reply_name = webhook_name_by_server.get(server_id) 
+        reply_name = webhook_name_by_server.get(server_id) or "Untitled"
         content_lower = (message.content or "").strip().lower()
         mentioned_by_name = reply_name and reply_name.strip().lower() in content_lower
-        should_reply = mentioned_by_name or random.random() < REPLY_CHANCE
+
+        # Reply if this message is a reply to something the bot/webhook sent
+        is_reply_to_bot = False
+        if message.reference and message.reference.message_id:
+            ref = message.reference.resolved
+            if ref is None:
+                try:
+                    ref = await message.channel.fetch_message(message.reference.message_id)
+                except Exception:
+                    ref = None
+            if ref is not None:
+                if server_id in webhook_by_server:
+                    wh_id, _ = webhook_by_server[server_id]
+                    if getattr(ref, "webhook_id", None) is not None and ref.webhook_id == int(wh_id):
+                        is_reply_to_bot = True
+                if ref.author == bot.user:
+                    is_reply_to_bot = True
+
+        should_reply = mentioned_by_name or is_reply_to_bot or random.random() < REPLY_CHANCE
 
         if should_reply:
             try:
