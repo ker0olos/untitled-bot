@@ -52,8 +52,6 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     """Log messages from watched channels; trigger AI reply via webhook."""
-    if message.author.bot:
-        return
     if message.guild is None:
         return
 
@@ -91,7 +89,7 @@ async def on_message(message):
                 # Previous messages only (exclude current — that's the one we're replying to)
                 history: List = []
                 async for msg in message.channel.history(limit=CONTEXT_MESSAGE_COUNT + 1):
-                    if msg.id != message.id and not msg.author.bot:
+                    if msg.id != message.id:
                         history.append(msg)
                 history.reverse()
                 additional_context = build_context_from_messages(history, include_media=False)
