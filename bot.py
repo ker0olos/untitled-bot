@@ -62,6 +62,13 @@ async def on_message(message):
     if server_id in watched_channels and watched_channels[server_id] == channel_id:
         if not enabled_by_server.get(server_id, True):
             return
+        # Ignore this bot's own messages (and its webhook) so it doesn't reply to itself
+        if message.author == bot.user:
+            return
+        if server_id in webhook_by_server:
+            wh_id, _ = webhook_by_server[server_id]
+            if getattr(message, 'webhook_id', None) == int(wh_id):
+                return
         print(f'[{message.guild.name} | #{message.channel.name}] {message.author.name}: {message.content}')
 
         reply_name = webhook_name_by_server.get(server_id) or "Untitled"
