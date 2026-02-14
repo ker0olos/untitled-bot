@@ -10,6 +10,7 @@ from store import (
     webhook_name_by_server,
     webhook_avatar_by_server,
     personality_by_server,
+    enabled_by_server,
 )
 
 
@@ -48,7 +49,7 @@ def setup(bot: commands.Bot) -> None:
                 'webhook_id': str(webhook.id),
                 'webhook_token': webhook.token,
             }
-            existing = supabase.table('servers').select('webhook_name, webhook_avatar_url, personality').eq('server_id', server_id).execute()
+            existing = supabase.table('servers').select('webhook_name, webhook_avatar_url, personality, enabled').eq('server_id', server_id).execute()
             if existing.data and len(existing.data) > 0:
                 row = existing.data[0]
                 if row.get('webhook_name') is not None:
@@ -57,6 +58,10 @@ def setup(bot: commands.Bot) -> None:
                     payload['webhook_avatar_url'] = row['webhook_avatar_url']
                 if row.get('personality') is not None:
                     payload['personality'] = row['personality']
+                if row.get('enabled') is not None:
+                    payload['enabled'] = row['enabled']
+            else:
+                payload['enabled'] = True
             supabase.table('servers').upsert(payload, on_conflict='server_id').execute()
 
             watched_channels[server_id] = channel_id
@@ -132,5 +137,25 @@ def setup(bot: commands.Bot) -> None:
                 ).execute()
             personality_by_server[server_id] = text
             await interaction.response.send_message('Personality updated.')
+        except Exception as e:
+            await interaction.response.send_message(f'Failed to save: {e}', ephemeral=True)
+
+    @bot.tree.command(name='toggle', description='Turn AI replies on or off for this server')
+    @app_commands.default_permissions(manage_guild=True)
+    @app_commands.describe(on='Turn replies on (true) or off (false)')
+    async def toggle(interaction: discord.Interaction, on: bool):
+        server_id = str(interaction.guild_id)
+        try:
+            supabase = get_supabase()
+            result = supabase.table('servers').update({'enabled': on}).eq('server_id', server_id).execute()
+            if result.data and len(result.data) > 0:
+                enabled_by_server[server_id] = on
+                status = 'on' if on else 'off'
+                await interaction.response.send_message(f'AI replies are now **{status}**.')
+            else:
+                await interaction.response.send_message(
+                    'Set a channel with /setchannel first.',
+                    ephemeral=True,
+                )
         except Exception as e:
             await interaction.response.send_message(f'Failed to save: {e}', ephemeral=True)

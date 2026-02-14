@@ -13,6 +13,8 @@ webhook_name_by_server: Dict[str, str] = {}
 webhook_avatar_by_server: Dict[str, str] = {}
 # server_id -> personality text for system prompt
 personality_by_server: Dict[str, str] = {}
+# server_id -> whether AI replies are enabled (default True if missing)
+enabled_by_server: Dict[str, bool] = {}
 
 
 async def load_watched_channels() -> None:
@@ -26,6 +28,7 @@ async def load_watched_channels() -> None:
         webhook_name_by_server.clear()
         webhook_avatar_by_server.clear()
         personality_by_server.clear()
+        enabled_by_server.clear()
 
         for row in response.data:
             server_id = str(row.get('server_id'))
@@ -45,6 +48,11 @@ async def load_watched_channels() -> None:
                 personality = row.get('personality')
                 if personality:
                     personality_by_server[server_id] = personality
+                enabled = row.get('enabled')
+                if enabled is not None:
+                    enabled_by_server[server_id] = bool(enabled)
+                else:
+                    enabled_by_server[server_id] = True
                 print(f'  - Watching server {server_id}, channel {channel_id}')
     except Exception as e:
         print(f'Failed to load watched channels: {e}')

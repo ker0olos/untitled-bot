@@ -14,6 +14,7 @@ from store import (
     webhook_name_by_server,
     webhook_avatar_by_server,
     personality_by_server,
+    enabled_by_server,
     load_watched_channels,
 )
 from ai.gemini import (
@@ -59,6 +60,8 @@ async def on_message(message):
     channel_id = str(message.channel.id)
 
     if server_id in watched_channels and watched_channels[server_id] == channel_id:
+        if not enabled_by_server.get(server_id, True):
+            return
         print(f'[{message.guild.name} | #{message.channel.name}] {message.author.name}: {message.content}')
 
         reply_name = webhook_name_by_server.get(server_id) or "Untitled"
